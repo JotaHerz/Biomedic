@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: biomedics-prediccion
+    runtime: python
+    plan: free
+    buildCommand: pip install -r servicio_prediccion/requirements.txt
+    startCommand: python servicio_prediccion/app.py
+    healthCheckPath: /salud
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0

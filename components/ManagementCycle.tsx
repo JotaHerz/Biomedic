@@ -2,7 +2,7 @@
 import React from 'react';
 
 const ManagementCycle: React.FC = () => {
-  const cycleImg = "https://aahpvknuwcbnzqtuwmax.supabase.co/storage/v1/object/public/imagenes/imagen_3_ciclo_gestion.png";
+  const cycleImg = "https://zzieeldzdcirhycjikda.supabase.co/storage/v1/object/sign/imagen/ciclo-equipos-biomedicos.svg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85ZmFkZGMwZC1lNTM3LTQ0OGEtYWVjMy00OTkxYzZmNjg5OGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZW4vY2ljbG8tZXF1aXBvcy1iaW9tZWRpY29zLnN2ZyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODcyNjYzOTksImV4cCI6MTgxODgwMjM5OX0.NcTxSNvoK9Vn4B0YaDt2dCfB_2qwyiBCY4--YCs0Kro";
 
   return (
     <section id="ciclo-de-gestión" className="py-24 bg-white overflow-hidden">

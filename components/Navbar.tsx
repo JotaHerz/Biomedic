@@ -26,6 +26,7 @@ const Navbar: React.FC = () => {
             { name: 'Inicio', id: 'inicio' },
             { name: 'Video', id: 'video' },
             { name: 'Servicios', id: 'servicios' },
+            { name: 'Mantenimiento IA', id: 'mantenimiento-predictivo' },
             { name: 'Llamar a Gabi', id: 'llamada-voz' },
             { name: 'Consultoría IA', id: 'consultoría-ia' }
           ].map((item) => (

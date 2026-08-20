@@ -1,0 +1,39 @@
+{
+  "horizonte_dias": 45,
+  "columnas_features": [
+    "equipo_norm",
+    "sede_norm",
+    "tipo_falla_norm",
+    "tipo_orden_norm",
+    "tipo_falla_frecuente_hist",
+    "n_fallas_previas",
+    "dias_desde_falla_anterior",
+    "antiguedad_dias",
+    "ratio_urgentes_historico"
+  ],
+  "columnas_categoricas": [
+    "equipo_norm",
+    "sede_norm",
+    "tipo_falla_norm",
+    "tipo_orden_norm",
+    "tipo_falla_frecuente_hist"
+  ],
+  "n_entrenamiento": 27333,
+  "roc_auc_holdout_global": 0.633,
+  "roc_auc_holdout_por_origen": {
+    "Reporte_Incidencias_Equipos_biomédicos  - reporte.csv": 0.747,
+    "reporte_incidencias_sinteticas - reporte_incidencias_sinteticas..csv": 0.572,
+    "reporte_incidencias_sinteticas_quirofanos.csv": 0.668,
+    "reporte_incidencias_sinteticas_set2.csv": 0.563
+  },
+  "rango_fechas": [
+    "2021-05-24",
+    "2026-08-19"
+  ],
+  "fuentes": [
+    "Reporte_Incidencias_Equipos_biomédicos  - reporte.csv",
+    "reporte_incidencias_sinteticas - reporte_incidencias_sinteticas..csv",
+    "reporte_incidencias_sinteticas_quirofanos.csv",
+    "reporte_incidencias_sinteticas_set2.csv"
+  ]
+}

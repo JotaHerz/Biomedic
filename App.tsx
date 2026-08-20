@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import VideoShowcase from './components/VideoShowcase';
 import Services from './components/Services';
 import ManagementCycle from './components/ManagementCycle';
+import PredictiveMaintenance from './components/PredictiveMaintenance';
 import VoiceAssistant from './components/VoiceAssistant';
 import AIChat from './components/AIChat';
 import Footer from './components/Footer';
@@ -22,6 +23,7 @@ const App: React.FC = () => {
             <VideoShowcase />
             <Services />
             <ManagementCycle />
+            <PredictiveMaintenance />
             <VoiceAssistant />
             <AIChat />
         </div>

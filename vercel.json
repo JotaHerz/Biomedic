@@ -1,7 +1,14 @@
 {
+    "functions": {
+        "api/predecir.py": {
+            "runtime": "python3.12",
+            "maxDuration": 30,
+            "includeFiles": "mantenimiento_predictivo/**"
+        }
+    },
     "rewrites": [
         {
-            "source": "/(.*)",
+            "source": "/((?!api/).*)",
             "destination": "/index.html"
         }
     ]

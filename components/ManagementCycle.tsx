@@ -2,8 +2,6 @@
 import React from 'react';
 
 const ManagementCycle: React.FC = () => {
-  const cycleImg = "https://zzieeldzdcirhycjikda.supabase.co/storage/v1/object/sign/imagen/ciclo-equipos-biomedicos.svg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85ZmFkZGMwZC1lNTM3LTQ0OGEtYWVjMy00OTkxYzZmNjg5OGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZW4vY2ljbG8tZXF1aXBvcy1iaW9tZWRpY29zLnN2ZyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODcyNjYzOTksImV4cCI6MTgxODgwMjM5OX0.NcTxSNvoK9Vn4B0YaDt2dCfB_2qwyiBCY4--YCs0Kro";
-
   return (
     <section id="ciclo-de-gestión" className="py-24 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,20 +13,7 @@ const ManagementCycle: React.FC = () => {
           </p>
         </div>
 
-        <div className="relative">
-          {/* Background Decorative Element */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-sky-50 rounded-full blur-3xl opacity-40 -z-10"></div>
-          
-          <div className="max-w-5xl mx-auto">
-            <img 
-              src={cycleImg} 
-              alt="Ciclo de Gestión Biomédica" 
-              className="w-full h-auto drop-shadow-2xl transform hover:scale-[1.02] transition-transform duration-500 cursor-zoom-in"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
                 { title: "Planificación", desc: "Evaluación de necesidades clínicas y presupuestarias." },
                 { title: "Adquisición", desc: "Selección de proveedores y cumplimiento normativo." },

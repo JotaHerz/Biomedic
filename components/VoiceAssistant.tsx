@@ -86,20 +86,17 @@ const VoiceAssistant: React.FC = () => {
         throw new Error("Tu navegador no admite el acceso al micrófono o no estás en un sitio seguro (HTTPS).");
       }
 
-      let stream: MediaStream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        streamRef.current = stream;
-      } catch (e: any) {
-        console.error("MediaDevices Error:", e);
-        throw new Error("No se pudo acceder al micrófono: " + (e.message || "Error desconocido"));
-      }
-
       // Crear instancia de GoogleGenAI justo antes de la llamada para asegurar clave actualizada
       const ai = new GoogleGenAI({ apiKey });
 
       if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       if (!outputAudioContextRef.current) outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+
+      // El permiso de microfono y el handshake con Gemini Live no dependen
+      // uno del otro: se piden en paralelo (antes se esperaba el microfono
+      // completo antes de siquiera empezar a conectar) para que el tiempo
+      // total hasta "active" sea el mayor de los dos, no la suma.
+      const micPromise = navigator.mediaDevices.getUserMedia({ audio: true });
 
       const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
@@ -111,7 +108,18 @@ const VoiceAssistant: React.FC = () => {
           systemInstruction: 'Tu nombre es Gabi, eres la asistente virtual femenina de BioMedics Solutions, experta en Ingeniería Clínica y Gestión de Equipos Biomédicos. Tienes un acento pausado, profesional y amigable. Tienes mucha paciencia y estás presta para ayudar. Saluda de forma inmediata. TU PRIMER MENSAJE DEBE SER: "Hola, soy Gabi, tu asistente virtual de confianza de BioMedics Solutions. Cuéntame, ¿cómo te puedo ayudar?" TU ÚNICO ÁMBITO de conversación es Ingeniería Clínica, equipos biomédicos, seguridad eléctrica médica, normativa hospitalaria y los servicios de BioMedics Solutions. Si te preguntan sobre cualquier otro tema (recetas, entretenimiento, temas personales, otras industrias, etc.), NO lo respondas. En su lugar responde, con el mismo tono cortés y profesional en ambos canales: "Lo siento, pero esa consulta está fuera de mi alcance como asistente de Ingeniería Clínica de BioMedics Solutions. Mi experiencia se centra en la gestión, mantenimiento y seguridad de equipos biomédicos. Si tienes alguna pregunta relacionada, estaré encantada de ayudarte." Adapta la frase de forma natural para que suene hablada, sin perder ese mensaje ni el tono cortés.'
         },
         callbacks: {
-          onopen: () => {
+          onopen: async () => {
+            let stream: MediaStream;
+            try {
+              stream = await micPromise;
+            } catch (e: any) {
+              console.error("MediaDevices Error:", e);
+              setErrorMessage("No se pudo acceder al micrófono: " + (e.message || "Error desconocido"));
+              stopCall();
+              return;
+            }
+            streamRef.current = stream;
+
             setStatus('active');
             setIsCalling(true);
 

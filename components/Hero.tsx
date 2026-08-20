@@ -2,7 +2,7 @@
 import React from 'react';
 
 const Hero: React.FC = () => {
-  const bannerImg = "https://aahpvknuwcbnzqtuwmax.supabase.co/storage/v1/object/public/imagenes/imagen_1_banner.png";
+  const bannerImg = "/banner-hero.jpg";
 
   return (
     <section id="inicio" className="relative h-screen flex items-center overflow-hidden">

@@ -16,6 +16,9 @@ export async function predecirRiesgo(
   archivos: { nombre: string; contenido: string }[],
   opts: { top?: number; origen?: string } = {}
 ): Promise<RespuestaPrediccion> {
+  // Sin 'top' el backend devuelve todos los equipos evaluados: las metricas
+  // del dashboard (totales, prioridad alta, concentracion por sede) necesitan
+  // el conjunto completo, no solo una vista recortada.
   const res = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -20,7 +20,7 @@ DIR_MODELO = Path(__file__).parent / "modelo"
 COLUMNAS_SALIDA = [
     "clave", "equipos", "sede", "ubicacion", "_origen", "fecha_creacion",
     "dias_desde_falla_anterior", "n_fallas_previas", "tipo_falla_frecuente_hist",
-    "probabilidad_riesgo", "prioridad",
+    "ratio_urgentes_historico", "probabilidad_riesgo", "prioridad",
 ]
 
 

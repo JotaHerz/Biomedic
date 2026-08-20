@@ -8,6 +8,16 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      proxy: {
+        // Vite no sirve funciones serverless: en dev, /api/predecir se reenvia
+        // directo al servicio de inferencia (mismo destino que usa el proxy
+        // de Vercel en produccion via PREDICCION_SERVICE_URL).
+        '/api/predecir': {
+          target: env.VITE_PREDICCION_SERVICE_URL || 'https://biomedic.onrender.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/predecir/, ''),
+        },
+      },
     },
     plugins: [react()],
     define: {

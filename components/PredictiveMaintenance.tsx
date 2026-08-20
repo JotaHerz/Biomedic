@@ -1,13 +1,80 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { obtenerMetadataModelo, predecirRiesgo } from '../services/predictiveMaintenanceService';
 import { ModeloMetadata, RiesgoEquipo } from '../types';
+
+type FiltroPrioridad = 'Todos' | 'Alta' | 'Media' | 'Baja';
 
 const COLOR_PRIORIDAD: Record<string, string> = {
   Alta: 'bg-red-100 text-red-700 border-red-200',
   Media: 'bg-amber-100 text-amber-700 border-amber-200',
   Baja: 'bg-emerald-100 text-emerald-700 border-emerald-200',
 };
+
+const COLOR_FILTRO_ACTIVO: Record<FiltroPrioridad, string> = {
+  Todos: 'bg-slate-800 text-white border-slate-800',
+  Alta: 'bg-red-600 text-white border-red-600',
+  Media: 'bg-amber-500 text-white border-amber-500',
+  Baja: 'bg-emerald-600 text-white border-emerald-600',
+};
+
+interface Metricas {
+  totalEquipos: number;
+  incidenciasHistoricas: number;
+  prioridadAlta: number;
+  urgenciasHistoricas: number;
+}
+
+interface ConcentracionSede {
+  sede: string;
+  total: number;
+  alta: number;
+  media: number;
+  baja: number;
+  pctAlta: number;
+}
+
+function calcularMetricas(resultados: RiesgoEquipo[], totalEquiposApi: number): Metricas {
+  let incidenciasHistoricas = 0;
+  let prioridadAlta = 0;
+  let urgenciasHistoricas = 0;
+
+  for (const r of resultados) {
+    incidenciasHistoricas += r.n_fallas_previas || 0;
+    if (r.prioridad === 'Alta') prioridadAlta += 1;
+    if (r.ratio_urgentes_historico != null) {
+      urgenciasHistoricas += Math.round(r.ratio_urgentes_historico * (r.n_fallas_previas || 0));
+    }
+  }
+
+  return {
+    totalEquipos: totalEquiposApi || resultados.length,
+    incidenciasHistoricas,
+    prioridadAlta,
+    urgenciasHistoricas,
+  };
+}
+
+function calcularConcentracionPorSede(resultados: RiesgoEquipo[]): ConcentracionSede[] {
+  const porSede = new Map<string, ConcentracionSede>();
+
+  for (const r of resultados) {
+    const sede = r.sede || 'Sin sede';
+    if (!porSede.has(sede)) {
+      porSede.set(sede, { sede, total: 0, alta: 0, media: 0, baja: 0, pctAlta: 0 });
+    }
+    const acc = porSede.get(sede)!;
+    acc.total += 1;
+    if (r.prioridad === 'Alta') acc.alta += 1;
+    else if (r.prioridad === 'Media') acc.media += 1;
+    else acc.baja += 1;
+  }
+
+  return Array.from(porSede.values())
+    .map((s) => ({ ...s, pctAlta: s.total ? s.alta / s.total : 0 }))
+    .sort((a, b) => b.alta - a.alta || b.pctAlta - a.pctAlta)
+    .slice(0, 6);
+}
 
 const PredictiveMaintenance: React.FC = () => {
   const [modelo, setModelo] = useState<ModeloMetadata | null>(null);
@@ -17,6 +84,7 @@ const PredictiveMaintenance: React.FC = () => {
   const [totalEquipos, setTotalEquipos] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState<FiltroPrioridad>('Todos');
 
   useEffect(() => {
     obtenerMetadataModelo()
@@ -24,16 +92,32 @@ const PredictiveMaintenance: React.FC = () => {
       .catch((e: Error) => setModeloError(e.message));
   }, []);
 
+  const metricas = useMemo(() => calcularMetricas(resultados, totalEquipos), [resultados, totalEquipos]);
+  const concentracionSedes = useMemo(() => calcularConcentracionPorSede(resultados), [resultados]);
+  const planDeAccion = useMemo(
+    () =>
+      [...resultados]
+        .filter((r) => r.prioridad === 'Alta')
+        .sort((a, b) => b.probabilidad_riesgo - a.probabilidad_riesgo)
+        .slice(0, 8),
+    [resultados]
+  );
+  const resultadosFiltrados = useMemo(
+    () => (filtro === 'Todos' ? resultados : resultados.filter((r) => r.prioridad === filtro)),
+    [resultados, filtro]
+  );
+
   const handleAnalizar = async () => {
     if (!archivo || isLoading) return;
     setIsLoading(true);
     setError(null);
     try {
       const contenido = await archivo.text();
-      const respuesta = await predecirRiesgo([{ nombre: archivo.name, contenido }], { top: 50 });
+      const respuesta = await predecirRiesgo([{ nombre: archivo.name, contenido }]);
       setModelo(respuesta.modelo);
       setResultados(respuesta.resultados);
       setTotalEquipos(respuesta.total_equipos);
+      setFiltro('Todos');
     } catch (e: any) {
       setError(e.message || 'No se pudo generar la predicción. Verifica el formato del CSV.');
       setResultados([]);
@@ -43,9 +127,9 @@ const PredictiveMaintenance: React.FC = () => {
   };
 
   const handleDescargar = () => {
-    if (!resultados.length) return;
-    const columnas = Object.keys(resultados[0]);
-    const filas = resultados.map((r) =>
+    if (!resultadosFiltrados.length) return;
+    const columnas = Object.keys(resultadosFiltrados[0]);
+    const filas = resultadosFiltrados.map((r) =>
       columnas.map((c) => JSON.stringify((r as Record<string, unknown>)[c] ?? '')).join(',')
     );
     const csv = [columnas.join(','), ...filas].join('\n');
@@ -102,20 +186,114 @@ const PredictiveMaintenance: React.FC = () => {
               {error}
             </div>
           )}
+        </div>
 
-          {resultados.length > 0 && (
-            <div className="mt-8">
+        {resultados.length > 0 && (
+          <div className="mt-10 space-y-8">
+            {/* KPIs */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Equipos evaluados</p>
+                <p className="text-3xl font-bold text-slate-900 mt-2">{metricas.totalEquipos.toLocaleString('es-CO')}</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Incidencias históricas</p>
+                <p className="text-3xl font-bold text-slate-900 mt-2">{metricas.incidenciasHistoricas.toLocaleString('es-CO')}</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-red-100 p-5 shadow-sm">
+                <p className="text-xs font-semibold text-red-500 uppercase tracking-wide">Prioridad alta</p>
+                <p className="text-3xl font-bold text-red-600 mt-2">{metricas.prioridadAlta.toLocaleString('es-CO')}</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Urgencias históricas</p>
+                <p className="text-3xl font-bold text-slate-900 mt-2">{metricas.urgenciasHistoricas.toLocaleString('es-CO')}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Plan de accion */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h3 className="font-bold text-slate-800 mb-1">Plan de acción — qué atender primero</h3>
+                <p className="text-xs text-slate-400 mb-4">Equipos de prioridad alta ordenados por riesgo</p>
+                {planDeAccion.length === 0 ? (
+                  <p className="text-sm text-emerald-600 font-medium">Sin equipos de prioridad alta por ahora.</p>
+                ) : (
+                  <ol className="space-y-3">
+                    {planDeAccion.map((r, i) => (
+                      <li key={r.clave + i} className="flex items-start gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center mt-0.5">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{r.equipos}</p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {r.sede} · {r.ubicacion} · {r.tipo_falla_frecuente_hist || 'falla sin patrón claro'}
+                          </p>
+                        </div>
+                        <span className="flex-shrink-0 text-sm font-bold text-red-600">
+                          {(r.probabilidad_riesgo * 100).toFixed(0)}%
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+
+              {/* Concentracion por sede */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h3 className="font-bold text-slate-800 mb-1">Concentración de riesgo por sede</h3>
+                <p className="text-xs text-slate-400 mb-4">% de equipos en prioridad alta por sede</p>
+                <div className="space-y-3">
+                  {concentracionSedes.map((s) => (
+                    <div key={s.sede}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium text-slate-700 truncate pr-2">{s.sede}</span>
+                        <span className="text-slate-500 flex-shrink-0">
+                          {s.alta}/{s.total} equipos ({(s.pctAlta * 100).toFixed(0)}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-red-500 rounded-full"
+                          style={{ width: `${Math.max(s.pctAlta * 100, s.alta > 0 ? 4 : 0)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla filtrable */}
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
               <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
                 <h3 className="font-bold text-slate-800">
-                  Top {resultados.length} de {totalEquipos} equipos evaluados
+                  Mostrando {resultadosFiltrados.length} de {resultados.length} equipos evaluados
                 </h3>
                 <button onClick={handleDescargar} className="text-sky-600 hover:text-sky-700 text-sm font-semibold">
-                  Descargar CSV completo
+                  Descargar CSV
                 </button>
               </div>
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {(['Todos', 'Alta', 'Media', 'Baja'] as FiltroPrioridad[]).map((opcion) => (
+                  <button
+                    key={opcion}
+                    onClick={() => setFiltro(opcion)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                      filtro === opcion
+                        ? COLOR_FILTRO_ACTIVO[opcion]
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {opcion}
+                  </button>
+                ))}
+              </div>
+
+              <div className="overflow-x-auto overflow-y-auto max-h-[28rem] rounded-xl border border-slate-200">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-slate-100 text-slate-600 uppercase text-xs">
+                  <thead className="bg-slate-100 text-slate-600 uppercase text-xs sticky top-0">
                     <tr>
                       <th className="px-4 py-3 text-left">Equipo</th>
                       <th className="px-4 py-3 text-left">Sede</th>
@@ -126,7 +304,7 @@ const PredictiveMaintenance: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {resultados.map((r, i) => (
+                    {resultadosFiltrados.map((r, i) => (
                       <tr key={r.clave + i} className="hover:bg-slate-50">
                         <td className="px-4 py-3 font-medium text-slate-800">{r.equipos}</td>
                         <td className="px-4 py-3 text-slate-600">{r.sede}</td>
@@ -146,8 +324,8 @@ const PredictiveMaintenance: React.FC = () => {
                 </table>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

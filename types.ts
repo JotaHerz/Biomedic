@@ -19,6 +19,7 @@ export interface RiesgoEquipo {
   dias_desde_falla_anterior: number | null;
   n_fallas_previas: number;
   tipo_falla_frecuente_hist: string | null;
+  ratio_urgentes_historico: number | null;
   probabilidad_riesgo: number;
   prioridad: 'Alta' | 'Media' | 'Baja';
 }

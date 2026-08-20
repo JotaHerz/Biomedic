@@ -40,3 +40,18 @@ export interface RespuestaPrediccion {
   total_equipos: number;
   resultados: RiesgoEquipo[];
 }
+
+export interface DisponibilidadResponse {
+  fecha: string;
+  horarios_disponibles: string[];
+}
+
+export interface SolicitudAuditoria {
+  nombre: string;
+  correo: string;
+  empresa: string;
+  servicio: string;
+  fecha: string;
+  hora: string;
+  mensaje: string;
+}

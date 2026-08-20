@@ -1,7 +1,11 @@
 
 import React from 'react';
 
-const Hero: React.FC = () => {
+interface Props {
+  onAgendarAuditoria: () => void;
+}
+
+const Hero: React.FC<Props> = ({ onAgendarAuditoria }) => {
   const bannerImg = "/banner-hero.jpg";
 
   return (
@@ -29,7 +33,10 @@ const Hero: React.FC = () => {
             <button className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all shadow-lg shadow-sky-900/40">
               Nuestros Servicios
             </button>
-            <button className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border border-white/30 px-8 py-4 rounded-lg font-bold text-lg transition-all">
+            <button
+              onClick={onAgendarAuditoria}
+              className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border border-white/30 px-8 py-4 rounded-lg font-bold text-lg transition-all"
+            >
               Agendar Auditoría
             </button>
           </div>

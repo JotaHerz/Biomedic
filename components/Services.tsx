@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { SERVICIOS_BIOMEDICS } from '../constants';
 
 const Services: React.FC = () => {
   const servicesImg = "https://aahpvknuwcbnzqtuwmax.supabase.co/storage/v1/object/public/imagenes/imagen_2_servicios.png";
@@ -15,13 +16,7 @@ const Services: React.FC = () => {
             </p>
             
             <ul className="space-y-4">
-                {[
-                    "Mantenimiento Preventivo y Correctivo",
-                    "Calibración y Metrología Biomédica",
-                    "Inventario Técnico Automatizado",
-                    "Gestión de Riesgos y Tecnovigilancia",
-                    "Capacitación a Personal Asistencial"
-                ].map((service, i) => (
+                {SERVICIOS_BIOMEDICS.filter((s) => s !== 'Otro').map((service, i) => (
                     <li key={i} className="flex items-center space-x-3 text-slate-700">
                         <div className="flex-shrink-0 w-6 h-6 bg-sky-500 rounded-full flex items-center justify-center text-white text-xs">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
